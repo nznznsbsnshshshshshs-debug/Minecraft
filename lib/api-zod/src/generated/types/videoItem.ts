@@ -5,9 +5,6 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
-export interface HealthStatus {
-  status: string;
-}
 
 export interface VideoItem {
   title: string;
@@ -17,15 +14,3 @@ export interface VideoItem {
   videoId: string;
   channel: string;
 }
-
-export interface RSSFeedResponse {
-  success: boolean;
-  count: number;
-  videos: VideoItem[];
-}
-
-export interface ErrorResponse {
-  success: boolean;
-  message: string;
-}
-

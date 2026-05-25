@@ -10,6 +10,8 @@ servers:
 tags:
   - name: health
     description: Health operations
+  - name: youtube
+    description: YouTube RSS feed operations
 paths:
   /healthz:
     get:
@@ -24,6 +26,25 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+  /rss:
+    get:
+      operationId: getYouTubeRSS
+      tags: [youtube]
+      summary: Get YouTube RSS feed
+      description: Returns latest videos from all YGP YouTube channels
+      responses:
+        "200":
+          description: List of videos
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RSSFeedResponse"
+        "500":
+          description: RSS fetch failed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
 components:
   schemas:
     HealthStatus:
@@ -33,4 +54,50 @@ components:
           type: string
       required:
         - status
-
+    VideoItem:
+      type: object
+      properties:
+        title:
+          type: string
+        link:
+          type: string
+        published:
+          type: string
+        thumbnail:
+          type: string
+        videoId:
+          type: string
+        channel:
+          type: string
+      required:
+        - title
+        - link
+        - published
+        - thumbnail
+        - videoId
+        - channel
+    RSSFeedResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        count:
+          type: integer
+        videos:
+          type: array
+          items:
+            $ref: "#/components/schemas/VideoItem"
+      required:
+        - success
+        - count
+        - videos
+    ErrorResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        message:
+          type: string
+      required:
+        - success
+        - message
