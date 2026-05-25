@@ -85,6 +85,42 @@ router.get("/mods/:id", async (req, res) => {
   }
 });
 
+router.patch("/mods/:id", async (req, res) => {
+  try {
+    await connectMongo();
+    const { name, description, category, version, downloadUrl, imageUrl, featured, author, tags } = req.body;
+    const update: Record<string, unknown> = {};
+    if (name !== undefined) update.name = name;
+    if (description !== undefined) update.description = description;
+    if (category === "java" || category === "bedrock") update.category = category;
+    if (version !== undefined) update.version = version;
+    if (downloadUrl !== undefined) update.downloadUrl = downloadUrl;
+    if (imageUrl !== undefined) update.imageUrl = imageUrl;
+    if (featured !== undefined) update.featured = featured;
+    if (author !== undefined) update.author = author;
+    if (tags !== undefined) update.tags = tags;
+    const mod = await ModModel.findByIdAndUpdate(req.params.id, { $set: update }, { new: true }).lean() as any;
+    if (!mod) return res.status(404).json({ success: false, message: "Mod not found" });
+    return res.json({
+      id: String(mod._id),
+      name: mod.name,
+      description: mod.description,
+      category: mod.category,
+      version: mod.version,
+      downloadUrl: mod.downloadUrl,
+      imageUrl: mod.imageUrl ?? null,
+      downloads: mod.downloads ?? 0,
+      uploadedAt: mod.uploadedAt?.toISOString() ?? new Date().toISOString(),
+      featured: mod.featured ?? false,
+      author: mod.author,
+      tags: mod.tags ?? [],
+    });
+  } catch (err) {
+    req.log.error({ err }, "Failed to update mod");
+    return res.status(500).json({ success: false, message: "Failed to update mod" });
+  }
+});
+
 router.delete("/mods/:id", async (req, res) => {
   try {
     await connectMongo();

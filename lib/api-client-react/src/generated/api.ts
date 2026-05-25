@@ -426,6 +426,51 @@ export function useGetMod<TData = Awaited<ReturnType<typeof getMod>>, TError = E
 
 
 
+export const getUpdateModUrl = (id: string) => `/api/mods/${id}`;
+
+/**
+ * @summary Update a mod by ID
+ */
+export const updateMod = async (id: string, modInput: Partial<ModInput>, options?: RequestInit): Promise<Mod> => {
+  return customFetch<Mod>(getUpdateModUrl(id), {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(modInput),
+  });
+};
+
+export const getUpdateModMutationOptions = <TError = ErrorType<ErrorResponse>, TContext = unknown>(
+  options?: { mutation?: UseMutationOptions<Awaited<ReturnType<typeof updateMod>>, TError, { id: string; data: Partial<ModInput> }, TContext>; request?: SecondParameter<typeof customFetch> }
+): UseMutationOptions<Awaited<ReturnType<typeof updateMod>>, TError, { id: string; data: Partial<ModInput> }, TContext> => {
+  const mutationKey = ['updateMod'];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateMod>>, { id: string; data: Partial<ModInput> }> = (props) => {
+    const { id, data } = props ?? {};
+    return updateMod(id, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type UpdateModMutationResult = NonNullable<Awaited<ReturnType<typeof updateMod>>>;
+export type UpdateModMutationBody = Partial<ModInput>;
+export type UpdateModMutationError = ErrorType<ErrorResponse>;
+
+/**
+ * @summary Update a mod by ID
+ */
+export const useUpdateMod = <TError = ErrorType<ErrorResponse>, TContext = unknown>(
+  options?: { mutation?: UseMutationOptions<Awaited<ReturnType<typeof updateMod>>, TError, { id: string; data: Partial<ModInput> }, TContext>; request?: SecondParameter<typeof customFetch> }
+): UseMutationResult<Awaited<ReturnType<typeof updateMod>>, TError, { id: string; data: Partial<ModInput> }, TContext> => {
+  return useMutation(getUpdateModMutationOptions(options));
+};
+
 export const getDeleteModUrl = (id: string,) => {
 
 

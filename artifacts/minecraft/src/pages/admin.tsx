@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { ShieldCheck, Plus, Trash2, Upload, Check, AlertCircle, Terminal, Lock, Eye, EyeOff } from "lucide-react";
-import { useListMods, useCreateMod, useDeleteMod, getListModsQueryKey } from "@workspace/api-client-react";
+import { ShieldCheck, Plus, Trash2, Upload, Check, AlertCircle, Terminal, Lock, Eye, EyeOff, Pencil, X } from "lucide-react";
+import { useListMods, useCreateMod, useDeleteMod, useUpdateMod, getListModsQueryKey } from "@workspace/api-client-react";
+import type { Mod } from "@workspace/api-client-react";
 import { ModSkeleton } from "@/components/skeleton-card";
 import PageTransition from "@/components/page-transition";
 import { motion, AnimatePresence } from "framer-motion";
@@ -127,17 +128,163 @@ function PasswordGate({ onUnlock }: { onUnlock: () => void }) {
   );
 }
 
+function modToForm(mod: Mod) {
+  return {
+    name: mod.name,
+    description: mod.description,
+    category: mod.category as "java" | "bedrock",
+    version: mod.version,
+    downloadUrl: mod.downloadUrl,
+    imageUrl: mod.imageUrl ?? "",
+    author: mod.author,
+    tags: mod.tags?.join(", ") ?? "",
+    featured: mod.featured,
+  };
+}
+
+function EditModal({
+  mod,
+  onClose,
+  onSave,
+  saving,
+}: {
+  mod: Mod;
+  onClose: () => void;
+  onSave: (data: ReturnType<typeof modToForm>) => void;
+  saving: boolean;
+}) {
+  const [form, setForm] = useState(() => modToForm(mod));
+
+  return (
+    <motion.div
+      className="fixed inset-0 z-[200] flex items-center justify-center px-4"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+    >
+      <motion.div
+        className="absolute inset-0"
+        style={{ background: "rgba(0,0,0,0.75)", backdropFilter: "blur(8px)" }}
+        onClick={onClose}
+      />
+      <motion.div
+        className="relative w-full max-w-lg rounded-2xl p-6 z-10"
+        style={{ background: "#0a0a0a", border: "1px solid rgba(74,222,128,0.25)", boxShadow: "0 0 60px rgba(74,222,128,0.08)" }}
+        initial={{ scale: 0.95, y: 20 }}
+        animate={{ scale: 1, y: 0 }}
+        exit={{ scale: 0.95, y: 20 }}
+        transition={{ duration: 0.25, ease: [0.25, 0.1, 0.25, 1] }}
+      >
+        <div className="flex items-center justify-between mb-5">
+          <h2 className="font-black text-base flex items-center gap-2" style={{ color: "#4ade80" }}>
+            <Pencil className="w-4 h-4" /> Edit Mod
+          </h2>
+          <button onClick={onClose} className="p-1.5 rounded-lg text-zinc-500 hover:text-white hover:bg-zinc-800 transition-colors">
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+
+        <form
+          onSubmit={(e) => { e.preventDefault(); onSave(form); }}
+          className="space-y-4 max-h-[70vh] overflow-y-auto pr-1"
+        >
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {[
+              { key: "name",        label: "Mod Name",              placeholder: "e.g. Futuristic Shaders", req: true },
+              { key: "author",      label: "Author",                placeholder: "e.g. YGP Team",           req: true },
+              { key: "version",     label: "Version",               placeholder: "e.g. 1.0.0",              req: true },
+              { key: "downloadUrl", label: "Download URL",          placeholder: "https://...",              req: true },
+              { key: "imageUrl",    label: "Image URL (optional)",  placeholder: "https://...",              req: false },
+              { key: "tags",        label: "Tags (comma-separated)",placeholder: "shaders, pvp",             req: false },
+            ].map(({ key, label, placeholder, req }) => (
+              <div key={key}>
+                <label className="block text-xs text-zinc-500 mb-1.5">{label}</label>
+                <input
+                  type="text"
+                  placeholder={placeholder}
+                  value={(form as any)[key]}
+                  onChange={(e) => setForm((f) => ({ ...f, [key]: e.target.value }))}
+                  className={inputCls}
+                  required={req}
+                />
+              </div>
+            ))}
+          </div>
+
+          <div>
+            <label className="block text-xs text-zinc-500 mb-1.5">Description</label>
+            <textarea
+              placeholder="Describe the mod..."
+              value={form.description}
+              onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
+              rows={3}
+              className={inputCls}
+              required
+            />
+          </div>
+
+          <div className="flex items-center gap-6 flex-wrap">
+            <div>
+              <label className="block text-xs text-zinc-500 mb-1.5">Category</label>
+              <select
+                value={form.category}
+                onChange={(e) => setForm((f) => ({ ...f, category: e.target.value as "java" | "bedrock" }))}
+                className="rounded-xl px-3 py-2.5 text-sm text-white focus:outline-none bg-zinc-900/80 border border-zinc-800 focus:border-green-400/50 transition-colors"
+              >
+                <option value="java">☕ Java</option>
+                <option value="bedrock">📱 Bedrock</option>
+              </select>
+            </div>
+            <label className="flex items-center gap-2 text-sm text-zinc-400 cursor-pointer mt-5">
+              <input
+                type="checkbox"
+                checked={form.featured}
+                onChange={(e) => setForm((f) => ({ ...f, featured: e.target.checked }))}
+                className="w-4 h-4 rounded accent-green-400"
+              />
+              ⭐ Featured mod
+            </label>
+          </div>
+
+          <div className="flex gap-3 pt-1">
+            <button
+              type="button"
+              onClick={onClose}
+              className="flex-1 py-3 rounded-xl font-semibold text-sm transition-all"
+              style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.1)", color: "#71717a" }}
+            >
+              Cancel
+            </button>
+            <motion.button
+              type="submit"
+              disabled={saving}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              className="flex-1 py-3 rounded-xl font-black text-black transition-all disabled:opacity-60"
+              style={{ background: "linear-gradient(135deg, #4ade80, #22c55e)", boxShadow: "0 0 20px rgba(74,222,128,0.3)" }}
+            >
+              {saving ? "Saving..." : "💾 Save Changes"}
+            </motion.button>
+          </div>
+        </form>
+      </motion.div>
+    </motion.div>
+  );
+}
+
 export default function Admin() {
   const [unlocked, setUnlocked] = useState(() => sessionStorage.getItem("ygp_admin_auth") === "1");
   const qc = useQueryClient();
   const { data: mods, isLoading } = useListMods();
   const createMod = useCreateMod();
   const deleteMod = useDeleteMod();
+  const updateMod = useUpdateMod();
 
   const [form, setForm] = useState(EMPTY_FORM);
   const [showForm, setShowForm] = useState(false);
   const [toast, setToast] = useState<{ type: "ok" | "err"; msg: string } | null>(null);
   const [deleting, setDeleting] = useState<string | null>(null);
+  const [editingMod, setEditingMod] = useState<Mod | null>(null);
 
   const handleUnlock = () => {
     sessionStorage.setItem("ygp_admin_auth", "1");
@@ -182,6 +329,31 @@ export default function Admin() {
     } finally { setDeleting(null); }
   };
 
+  const handleEdit = async (formData: ReturnType<typeof modToForm>) => {
+    if (!editingMod) return;
+    try {
+      await updateMod.mutateAsync({
+        id: editingMod.id,
+        data: {
+          name: formData.name,
+          description: formData.description,
+          category: formData.category,
+          version: formData.version,
+          downloadUrl: formData.downloadUrl,
+          imageUrl: formData.imageUrl || undefined,
+          featured: formData.featured,
+          author: formData.author,
+          tags: formData.tags ? formData.tags.split(",").map((t) => t.trim()).filter(Boolean) : [],
+        },
+      });
+      qc.invalidateQueries({ queryKey: getListModsQueryKey() });
+      setEditingMod(null);
+      showToast("ok", `"${formData.name}" updated.`);
+    } catch {
+      showToast("err", "Failed to update mod.");
+    }
+  };
+
   return (
     <PageTransition>
       <div className="min-h-screen bg-black text-white pb-24">
@@ -202,6 +374,17 @@ export default function Admin() {
               {toast.type === "ok" ? <Check className="w-4 h-4" /> : <AlertCircle className="w-4 h-4" />}
               {toast.msg}
             </motion.div>
+          )}
+        </AnimatePresence>
+
+        <AnimatePresence>
+          {editingMod && (
+            <EditModal
+              mod={editingMod}
+              onClose={() => setEditingMod(null)}
+              onSave={handleEdit}
+              saving={updateMod.isPending}
+            />
           )}
         </AnimatePresence>
 
@@ -365,12 +548,26 @@ export default function Admin() {
                       <p className="text-zinc-500 text-xs line-clamp-1">{mod.description}</p>
                       <p className="text-zinc-700 text-xs mt-0.5 font-mono">v{mod.version} · {mod.author} · {mod.downloads} dl</p>
                     </div>
-                    <motion.button onClick={() => handleDelete(mod.id, mod.name)} disabled={deleting === mod.id}
-                      whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}
-                      className="shrink-0 p-2 rounded-xl transition-all disabled:opacity-50"
-                      style={{ border: "1px solid rgba(239,68,68,0.2)", color: "#f87171" }}>
-                      <Trash2 className="w-4 h-4" />
-                    </motion.button>
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      <motion.button
+                        onClick={() => setEditingMod(mod)}
+                        whileHover={{ scale: 1.1 }}
+                        whileTap={{ scale: 0.9 }}
+                        className="p-2 rounded-xl transition-all"
+                        style={{ border: "1px solid rgba(74,222,128,0.2)", color: "#4ade80" }}
+                        title="Edit mod"
+                      >
+                        <Pencil className="w-4 h-4" />
+                      </motion.button>
+                      <motion.button onClick={() => handleDelete(mod.id, mod.name)} disabled={deleting === mod.id}
+                        whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}
+                        className="p-2 rounded-xl transition-all disabled:opacity-50"
+                        style={{ border: "1px solid rgba(239,68,68,0.2)", color: "#f87171" }}
+                        title="Delete mod"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </motion.button>
+                    </div>
                   </motion.div>
                 ))}
               </motion.div>
