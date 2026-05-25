@@ -1,5 +1,5 @@
 import { useLocation } from "wouter";
-import { Home, Sword, Youtube, Share2, ShieldCheck } from "lucide-react";
+import { Home, Sword, Youtube, Share2 } from "lucide-react";
 import { motion } from "framer-motion";
 
 const NAV = [
@@ -7,7 +7,6 @@ const NAV = [
   { href: "/mods", icon: Sword, label: "Mods" },
   { href: "/youtube", icon: Youtube, label: "Videos" },
   { href: "/socials", icon: Share2, label: "Socials" },
-  { href: "/admin", icon: ShieldCheck, label: "Admin" },
 ];
 
 export default function BottomNav() {
@@ -18,11 +17,15 @@ export default function BottomNav() {
   );
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 h-16 safe-area-pb"
-      style={{ background: "rgba(0,0,0,0.85)", backdropFilter: "blur(24px)", borderTop: "1px solid rgba(74,222,128,0.12)" }}>
+    <nav
+      className="fixed bottom-0 left-0 right-0 z-50 h-16 safe-area-pb"
+      style={{
+        background: "rgba(0,0,0,0.88)",
+        backdropFilter: "blur(24px)",
+        borderTop: "1px solid rgba(74,222,128,0.12)",
+      }}
+    >
       <div className="relative flex items-stretch h-full max-w-lg mx-auto">
-
-        {/* Sliding active pill */}
         {activeIdx >= 0 && (
           <motion.div
             className="absolute top-2 bottom-2 rounded-xl pointer-events-none"
@@ -59,10 +62,7 @@ export default function BottomNav() {
               </motion.div>
               <span
                 className="text-[9px] font-semibold tracking-wide"
-                style={{
-                  color: active ? "#4ade80" : "#52525b",
-                  transition: "color 0.2s",
-                }}
+                style={{ color: active ? "#4ade80" : "#52525b", transition: "color 0.2s" }}
               >
                 {label}
               </span>

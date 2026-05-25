@@ -1,5 +1,5 @@
 import { Link } from "wouter";
-import { Sword, Youtube, ChevronRight, Zap, Star, Cpu, Globe } from "lucide-react";
+import { Sword, Youtube, ChevronRight, Zap, Star, Cpu } from "lucide-react";
 import ParticleBg from "@/components/particle-bg";
 import PageTransition from "@/components/page-transition";
 import { useListMods } from "@workspace/api-client-react";
@@ -42,7 +42,6 @@ export default function Home() {
             style={{ backgroundImage: "linear-gradient(rgba(74,222,128,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(74,222,128,0.03) 1px, transparent 1px)", backgroundSize: "40px 40px" }} />
 
           <motion.div style={{ y: heroY, opacity: heroOpacity }} className="relative z-10 max-w-2xl mx-auto text-center w-full">
-            {/* Badge */}
             <motion.div
               initial={{ opacity: 0, scale: 0.8 }}
               animate={{ opacity: 1, scale: 1 }}
@@ -56,7 +55,6 @@ export default function Home() {
               YGP Minecraft Universe
             </motion.div>
 
-            {/* Title */}
             <motion.div
               initial={{ opacity: 0, y: 40 }}
               animate={{ opacity: 1, y: 0 }}
@@ -64,8 +62,10 @@ export default function Home() {
             >
               <h1 className="text-5xl sm:text-7xl font-black mb-2 leading-none tracking-tight">
                 <span className="block text-white">YGP</span>
-                <span className="block bg-gradient-to-r from-green-400 via-emerald-300 to-cyan-400 bg-clip-text text-transparent"
-                  style={{ filter: "drop-shadow(0 0 40px rgba(74,222,128,0.5))" }}>
+                <span
+                  className="block bg-gradient-to-r from-green-400 via-emerald-300 to-cyan-400 bg-clip-text text-transparent"
+                  style={{ filter: "drop-shadow(0 0 40px rgba(74,222,128,0.5))" }}
+                >
                   Minecraft
                 </span>
               </h1>
@@ -80,7 +80,6 @@ export default function Home() {
               Futuristic mods, addons, creator content & cinematic experiences — all in one hub.
             </motion.p>
 
-            {/* CTA Buttons */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -92,18 +91,14 @@ export default function Home() {
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.97 }}
                   className="flex items-center justify-center gap-2 px-7 py-3.5 rounded-2xl font-bold text-base cursor-pointer"
-                  style={{
-                    background: "linear-gradient(135deg, #4ade80, #22c55e)",
-                    boxShadow: "0 0 30px rgba(74,222,128,0.45)",
-                    color: "#000",
-                  }}
+                  style={{ background: "linear-gradient(135deg, #4ade80, #22c55e)", boxShadow: "0 0 30px rgba(74,222,128,0.45)", color: "#000" }}
                 >
                   <Sword className="w-4 h-4" /> Explore Mods
                 </motion.span>
               </Link>
               <Link href="/youtube">
                 <motion.span
-                  whileHover={{ scale: 1.05, borderColor: "rgba(74,222,128,0.6)" }}
+                  whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.97 }}
                   className="flex items-center justify-center gap-2 px-7 py-3.5 rounded-2xl font-bold text-base cursor-pointer"
                   style={{ border: "1px solid rgba(255,255,255,0.12)", color: "#fff", background: "rgba(255,255,255,0.05)" }}
@@ -113,7 +108,6 @@ export default function Home() {
               </Link>
             </motion.div>
 
-            {/* RGB toggle */}
             <motion.button
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -132,7 +126,6 @@ export default function Home() {
             </motion.button>
           </motion.div>
 
-          {/* Scroll indicator */}
           <motion.div
             className="absolute bottom-6 left-1/2 -translate-x-1/2"
             animate={{ y: [0, 8, 0] }}
@@ -161,19 +154,10 @@ export default function Home() {
                     whileHover={{ scale: 1.03, y: -4 }}
                     whileTap={{ scale: 0.98 }}
                     className="relative group rounded-2xl p-5 cursor-pointer overflow-hidden h-full"
-                    style={{
-                      background: "rgba(255,255,255,0.03)",
-                      border: `1px solid ${color}22`,
-                      backdropFilter: "blur(16px)",
-                    }}
-                    onHoverStart={(e) => {
-                      (e.target as HTMLElement).closest("[data-card]")?.setAttribute("data-glow", "true");
-                    }}
+                    style={{ background: "rgba(255,255,255,0.03)", border: `1px solid ${color}22`, backdropFilter: "blur(16px)" }}
                   >
-                    <motion.div
-                      className="absolute inset-0 opacity-0 group-hover:opacity-100 pointer-events-none rounded-2xl transition-opacity duration-300"
-                      style={{ boxShadow: `0 0 30px ${glow}`, background: `radial-gradient(ellipse at 50% 0%, ${glow.replace("0.25", "0.08")}, transparent 70%)` }}
-                    />
+                    <motion.div className="absolute inset-0 opacity-0 group-hover:opacity-100 pointer-events-none rounded-2xl transition-opacity duration-300"
+                      style={{ boxShadow: `0 0 30px ${glow}`, background: `radial-gradient(ellipse at 50% 0%, ${glow.replace("0.25", "0.08")}, transparent 70%)` }} />
                     <div className="text-3xl mb-3 relative z-10">{icon}</div>
                     <h3 className="font-bold text-base mb-1.5 relative z-10" style={{ color }}>{title}</h3>
                     <p className="text-zinc-400 text-sm leading-snug relative z-10">{desc}</p>
@@ -187,7 +171,7 @@ export default function Home() {
           </motion.div>
         </section>
 
-        {/* Featured mods */}
+        {/* Featured mods — only when real data exists */}
         {featured.length > 0 && (
           <section className="relative z-10 px-5 pb-10">
             <div className="max-w-2xl mx-auto">
@@ -214,8 +198,10 @@ export default function Home() {
                 viewport={{ once: true }}
                 className="grid grid-cols-1 sm:grid-cols-3 gap-4"
               >
-                {featured.map((mod, i) => (
-                  <motion.div key={mod.id} variants={item}
+                {featured.map((mod) => (
+                  <motion.div
+                    key={mod.id}
+                    variants={item}
                     className="rounded-2xl p-4 cursor-pointer"
                     style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(74,222,128,0.15)", backdropFilter: "blur(12px)" }}
                     whileHover={{ scale: 1.02, borderColor: "rgba(74,222,128,0.4)" }}
@@ -238,7 +224,7 @@ export default function Home() {
           </section>
         )}
 
-        {/* System info strip */}
+        {/* Live status — no fake numbers */}
         <section className="relative z-10 px-5 pb-6">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -247,7 +233,7 @@ export default function Home() {
             className="max-w-2xl mx-auto rounded-2xl p-5"
             style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(74,222,128,0.1)", backdropFilter: "blur(16px)" }}
           >
-            <div className="flex items-center gap-2 mb-4">
+            <div className="flex items-center gap-2 mb-3">
               <Cpu className="w-4 h-4" style={{ color: "#4ade80" }} />
               <span className="text-xs font-mono" style={{ color: "rgba(74,222,128,0.7)" }}>SYSTEM.STATUS</span>
               <div className="flex-1 h-px" style={{ background: "rgba(74,222,128,0.15)" }} />
@@ -255,36 +241,7 @@ export default function Home() {
                 animate={{ opacity: [1, 0.3, 1] }} transition={{ repeat: Infinity, duration: 1.5 }} />
               <span className="text-xs font-mono text-green-400">ONLINE</span>
             </div>
-            <div className="grid grid-cols-3 divide-x divide-white/5">
-              {[{ icon: "⚔️", label: "Mods", value: "50+" }, { icon: "📥", label: "Downloads", value: "10K+" }, { icon: "📡", label: "Channels", value: "5" }].map(({ icon, label, value }) => (
-                <div key={label} className="text-center px-4">
-                  <div className="text-lg mb-0.5">{icon}</div>
-                  <motion.div className="text-xl font-black" style={{ color: "#4ade80" }}
-                    initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }}>
-                    {value}
-                  </motion.div>
-                  <div className="text-[10px] text-zinc-500 font-mono uppercase tracking-widest">{label}</div>
-                </div>
-              ))}
-            </div>
-          </motion.div>
-        </section>
-
-        {/* Gaming OS footer bar */}
-        <section className="relative z-10 px-5 pb-4">
-          <motion.div
-            initial={{ opacity: 0 }}
-            whileInView={{ opacity: 1 }}
-            viewport={{ once: true }}
-            className="max-w-2xl mx-auto flex items-center justify-between text-[10px] font-mono"
-            style={{ color: "rgba(74,222,128,0.35)" }}
-          >
-            <span>YGP-OS v2.0</span>
-            <div className="flex items-center gap-1.5">
-              <Globe className="w-3 h-3" />
-              <span>CONNECTED</span>
-            </div>
-            <span>{new Date().toLocaleDateString()}</span>
+            <p className="text-zinc-500 text-xs font-mono">All systems operational. Connect via the navigation below.</p>
           </motion.div>
         </section>
       </div>
