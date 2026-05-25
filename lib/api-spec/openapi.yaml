@@ -1,9 +1,8 @@
 openapi: 3.1.0
 info:
-  # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: YGP Minecraft API
 servers:
   - url: /api
     description: Base API path
@@ -11,14 +10,15 @@ tags:
   - name: health
     description: Health operations
   - name: youtube
-    description: YouTube RSS feed operations
+    description: YouTube RSS feed
+  - name: mods
+    description: Minecraft mods
 paths:
   /healthz:
     get:
       operationId: healthCheck
       tags: [health]
       summary: Health check
-      description: Returns server health status
       responses:
         "200":
           description: Healthy
@@ -31,16 +31,111 @@ paths:
       operationId: getYouTubeRSS
       tags: [youtube]
       summary: Get YouTube RSS feed
-      description: Returns latest videos from all YGP YouTube channels
       responses:
         "200":
-          description: List of videos
+          description: Video list
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/RSSFeedResponse"
         "500":
           description: RSS fetch failed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /mods:
+    get:
+      operationId: listMods
+      tags: [mods]
+      summary: List all mods
+      parameters:
+        - name: category
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [java, bedrock]
+        - name: featured
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Mod list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Mod"
+    post:
+      operationId: createMod
+      tags: [mods]
+      summary: Upload a mod
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ModInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Mod"
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /mods/{id}:
+    get:
+      operationId: getMod
+      tags: [mods]
+      summary: Get a mod by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Mod
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Mod"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    delete:
+      operationId: deleteMod
+      tags: [mods]
+      summary: Delete a mod
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Mod"
+        "404":
+          description: Not found
           content:
             application/json:
               schema:
@@ -52,8 +147,7 @@ components:
       properties:
         status:
           type: string
-      required:
-        - status
+      required: [status]
     VideoItem:
       type: object
       properties:
@@ -69,13 +163,7 @@ components:
           type: string
         channel:
           type: string
-      required:
-        - title
-        - link
-        - published
-        - thumbnail
-        - videoId
-        - channel
+      required: [title, link, published, thumbnail, videoId, channel]
     RSSFeedResponse:
       type: object
       properties:
@@ -87,10 +175,7 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/VideoItem"
-      required:
-        - success
-        - count
-        - videos
+      required: [success, count, videos]
     ErrorResponse:
       type: object
       properties:
@@ -98,6 +183,60 @@ components:
           type: boolean
         message:
           type: string
-      required:
-        - success
-        - message
+      required: [success, message]
+    Mod:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        category:
+          type: string
+          enum: [java, bedrock]
+        version:
+          type: string
+        downloadUrl:
+          type: string
+        imageUrl:
+          type: ["string", "null"]
+        downloads:
+          type: integer
+        uploadedAt:
+          type: string
+        featured:
+          type: boolean
+        author:
+          type: string
+        tags:
+          type: array
+          items:
+            type: string
+      required: [id, name, description, category, version, downloadUrl, downloads, uploadedAt, featured, author, tags]
+    ModInput:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        category:
+          type: string
+          enum: [java, bedrock]
+        version:
+          type: string
+        downloadUrl:
+          type: string
+        imageUrl:
+          type: string
+        featured:
+          type: boolean
+        author:
+          type: string
+        tags:
+          type: array
+          items:
+            type: string
+      required: [name, description, category, version, downloadUrl, author]
