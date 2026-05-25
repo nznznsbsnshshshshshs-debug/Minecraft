@@ -1,9 +1,6 @@
-import "./globals.css";
-import type { Metadata } from "next";
-
-export const metadata: Metadata = {
+export const metadata = {
   title: "YGP Minecraft",
-  description: "Minecraft creator ecosystem",
+  description: "Minecraft Mods & YouTube Hub",
 };
 
 export default function RootLayout({
@@ -13,7 +10,16 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body
+        style={{
+          margin: 0,
+          background: "#050505",
+          color: "white",
+          fontFamily: "Arial",
+        }}
+      >
+        {children}
+      </body>
     </html>
   );
 }
