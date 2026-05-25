@@ -1,12 +1,33 @@
+import { motion } from "framer-motion";
+
+const shimmer = {
+  initial: { x: "-100%" },
+  animate: { x: "100%" },
+  transition: { repeat: Infinity, duration: 1.4, ease: "linear" },
+};
+
+function ShimmerBar({ className }: { className?: string }) {
+  return (
+    <div className={`relative overflow-hidden rounded ${className}`}
+      style={{ background: "rgba(255,255,255,0.05)" }}>
+      <motion.div
+        className="absolute inset-0"
+        style={{ background: "linear-gradient(90deg, transparent, rgba(74,222,128,0.08), transparent)" }}
+        {...shimmer}
+      />
+    </div>
+  );
+}
+
 export function ModSkeleton() {
   return (
-    <div className="glass-card rounded-2xl overflow-hidden border border-zinc-800 animate-pulse">
-      <div className="w-full h-36 bg-zinc-800/60" />
+    <div className="rounded-2xl overflow-hidden" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}>
+      <ShimmerBar className="w-full h-36 rounded-none" />
       <div className="p-4 space-y-3">
-        <div className="h-4 bg-zinc-800/80 rounded w-2/3" />
-        <div className="h-3 bg-zinc-800/60 rounded w-full" />
-        <div className="h-3 bg-zinc-800/60 rounded w-4/5" />
-        <div className="h-9 bg-zinc-800/40 rounded-xl mt-4" />
+        <ShimmerBar className="h-4 w-2/3" />
+        <ShimmerBar className="h-3 w-full" />
+        <ShimmerBar className="h-3 w-4/5" />
+        <ShimmerBar className="h-9 w-full mt-4" />
       </div>
     </div>
   );
@@ -14,13 +35,13 @@ export function ModSkeleton() {
 
 export function VideoSkeleton() {
   return (
-    <div className="glass-card rounded-2xl overflow-hidden border border-zinc-800 animate-pulse">
-      <div className="w-full aspect-video bg-zinc-800/60" />
+    <div className="rounded-2xl overflow-hidden" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}>
+      <ShimmerBar className="w-full aspect-video rounded-none" />
       <div className="p-4 space-y-2">
-        <div className="h-3 bg-zinc-800/80 rounded w-1/3" />
-        <div className="h-4 bg-zinc-800/60 rounded w-full" />
-        <div className="h-4 bg-zinc-800/60 rounded w-3/4" />
-        <div className="h-3 bg-zinc-800/40 rounded w-1/4 mt-1" />
+        <ShimmerBar className="h-3 w-1/3" />
+        <ShimmerBar className="h-4 w-full" />
+        <ShimmerBar className="h-4 w-3/4" />
+        <ShimmerBar className="h-3 w-1/4 mt-1" />
       </div>
     </div>
   );

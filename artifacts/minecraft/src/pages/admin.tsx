@@ -1,13 +1,18 @@
 import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { ShieldCheck, Plus, Trash2, Upload, Check, AlertCircle } from "lucide-react";
+import { ShieldCheck, Plus, Trash2, Upload, Check, AlertCircle, Terminal } from "lucide-react";
 import { useListMods, useCreateMod, useDeleteMod, getListModsQueryKey } from "@workspace/api-client-react";
 import { ModSkeleton } from "@/components/skeleton-card";
+import PageTransition from "@/components/page-transition";
+import { motion, AnimatePresence } from "framer-motion";
 
 const EMPTY_FORM = {
   name: "", description: "", category: "java" as "java" | "bedrock",
   version: "", downloadUrl: "", imageUrl: "", author: "", tags: "", featured: false,
 };
+
+const inputCls = "w-full rounded-xl px-3 py-2.5 text-sm text-white placeholder-zinc-600 focus:outline-none transition-colors resize-none"
+  + " bg-zinc-900/80 border border-zinc-800 focus:border-green-400/50";
 
 export default function Admin() {
   const qc = useQueryClient();
@@ -30,20 +35,14 @@ export default function Admin() {
     try {
       await createMod.mutateAsync({
         data: {
-          name: form.name,
-          description: form.description,
-          category: form.category,
-          version: form.version,
-          downloadUrl: form.downloadUrl,
-          imageUrl: form.imageUrl || undefined,
-          featured: form.featured,
-          author: form.author,
+          name: form.name, description: form.description, category: form.category,
+          version: form.version, downloadUrl: form.downloadUrl,
+          imageUrl: form.imageUrl || undefined, featured: form.featured, author: form.author,
           tags: form.tags ? form.tags.split(",").map((t) => t.trim()).filter(Boolean) : [],
         },
       });
       qc.invalidateQueries({ queryKey: getListModsQueryKey() });
-      setForm(EMPTY_FORM);
-      setShowForm(false);
+      setForm(EMPTY_FORM); setShowForm(false);
       showToast("ok", "Mod uploaded successfully!");
     } catch {
       showToast("err", "Failed to upload mod. Check the fields.");
@@ -59,167 +58,229 @@ export default function Admin() {
       showToast("ok", `"${name}" deleted.`);
     } catch {
       showToast("err", "Failed to delete mod.");
-    } finally {
-      setDeleting(null);
-    }
+    } finally { setDeleting(null); }
   };
 
   return (
-    <div className="min-h-screen bg-black text-white pb-24">
-      {/* Toast */}
-      {toast && (
-        <div className={`fixed top-4 left-1/2 -translate-x-1/2 z-[100] flex items-center gap-2 px-4 py-3 rounded-xl border text-sm font-medium shadow-lg transition-all ${
-          toast.type === "ok"
-            ? "bg-green-500/10 border-green-400/40 text-green-300"
-            : "bg-red-500/10 border-red-400/40 text-red-300"
-        }`}>
-          {toast.type === "ok" ? <Check className="w-4 h-4" /> : <AlertCircle className="w-4 h-4" />}
-          {toast.msg}
-        </div>
-      )}
-
-      {/* Header */}
-      <div className="relative overflow-hidden px-5 pt-12 pb-8">
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(34,197,94,0.10),transparent_60%)]" />
-        <div className="relative z-10 max-w-2xl mx-auto">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <ShieldCheck className="w-6 h-6 text-green-400" />
-              <h1 className="text-2xl font-black">Admin Panel</h1>
-            </div>
-            <button
-              onClick={() => setShowForm((v) => !v)}
-              className="flex items-center gap-2 px-4 py-2 rounded-xl bg-green-500/10 border border-green-400/30 text-green-300 text-sm font-semibold hover:bg-green-500/20 transition-all"
+    <PageTransition>
+      <div className="min-h-screen bg-black text-white pb-24">
+        {/* Toast */}
+        <AnimatePresence>
+          {toast && (
+            <motion.div
+              initial={{ opacity: 0, y: -20, scale: 0.95 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -10, scale: 0.95 }}
+              className="fixed top-4 left-1/2 -translate-x-1/2 z-[100] flex items-center gap-2 px-4 py-3 rounded-xl border text-sm font-medium shadow-xl"
+              style={{
+                background: toast.type === "ok" ? "rgba(74,222,128,0.1)" : "rgba(239,68,68,0.1)",
+                border: `1px solid ${toast.type === "ok" ? "rgba(74,222,128,0.4)" : "rgba(239,68,68,0.4)"}`,
+                color: toast.type === "ok" ? "#4ade80" : "#f87171",
+                backdropFilter: "blur(16px)",
+              }}
             >
-              {showForm ? "Cancel" : <><Plus className="w-4 h-4" /> Upload Mod</>}
-            </button>
+              {toast.type === "ok" ? <Check className="w-4 h-4" /> : <AlertCircle className="w-4 h-4" />}
+              {toast.msg}
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Header */}
+        <div className="relative overflow-hidden px-5 pt-14 pb-8">
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(34,197,94,0.10),transparent_60%)]" />
+          <div className="relative z-10 max-w-2xl mx-auto">
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
+              className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-xl" style={{ background: "rgba(74,222,128,0.1)", border: "1px solid rgba(74,222,128,0.2)" }}>
+                  <ShieldCheck className="w-5 h-5" style={{ color: "#4ade80" }} />
+                </div>
+                <h1 className="text-2xl font-black">Admin Panel</h1>
+              </div>
+              <motion.button
+                onClick={() => setShowForm((v) => !v)}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all"
+                style={{
+                  background: showForm ? "rgba(239,68,68,0.1)" : "rgba(74,222,128,0.1)",
+                  border: `1px solid ${showForm ? "rgba(239,68,68,0.3)" : "rgba(74,222,128,0.3)"}`,
+                  color: showForm ? "#f87171" : "#4ade80",
+                }}
+              >
+                {showForm ? "✕ Cancel" : <><Plus className="w-4 h-4" /> Upload Mod</>}
+              </motion.button>
+            </motion.div>
+
+            {/* System info bar */}
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.2 }}
+              className="flex items-center gap-3 mt-4 text-[10px] font-mono"
+              style={{ color: "rgba(74,222,128,0.4)" }}>
+              <Terminal className="w-3 h-3" />
+              <span>ADMIN_OS v2.0</span>
+              <span>·</span>
+              <span>{mods?.length ?? 0} MODS INDEXED</span>
+              <span>·</span>
+              <motion.span style={{ color: "#4ade80" }} animate={{ opacity: [1, 0.3, 1] }} transition={{ repeat: Infinity, duration: 1.5 }}>
+                ● LIVE
+              </motion.span>
+            </motion.div>
+          </div>
+        </div>
+
+        <div className="px-5 max-w-2xl mx-auto space-y-6">
+          {/* Upload form */}
+          <AnimatePresence>
+            {showForm && (
+              <motion.form
+                onSubmit={handleSubmit}
+                initial={{ opacity: 0, y: -16, scale: 0.98 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: -10, scale: 0.98 }}
+                transition={{ duration: 0.3, ease: [0.25, 0.1, 0.25, 1] }}
+                className="rounded-2xl p-5 space-y-4"
+                style={{ background: "rgba(74,222,128,0.03)", border: "1px solid rgba(74,222,128,0.2)", backdropFilter: "blur(16px)" }}
+              >
+                <h2 className="font-bold text-base flex items-center gap-2" style={{ color: "#4ade80" }}>
+                  <Upload className="w-4 h-4" /> Upload New Mod
+                </h2>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {[
+                    { key: "name", label: "Mod Name", placeholder: "e.g. Futuristic Shaders", req: true },
+                    { key: "author", label: "Author", placeholder: "e.g. YGP Team", req: true },
+                    { key: "version", label: "Version", placeholder: "e.g. 1.0.0", req: true },
+                    { key: "downloadUrl", label: "Download URL", placeholder: "https://...", req: true },
+                    { key: "imageUrl", label: "Image URL (optional)", placeholder: "https://...", req: false },
+                    { key: "tags", label: "Tags (comma-separated)", placeholder: "shaders, pvp", req: false },
+                  ].map(({ key, label, placeholder, req }) => (
+                    <div key={key}>
+                      <label className="block text-xs text-zinc-500 mb-1.5">{label}</label>
+                      <input
+                        type="text"
+                        placeholder={placeholder}
+                        value={(form as any)[key]}
+                        onChange={(e) => setForm((f) => ({ ...f, [key]: e.target.value }))}
+                        className={inputCls}
+                        required={req}
+                      />
+                    </div>
+                  ))}
+                </div>
+
+                <div>
+                  <label className="block text-xs text-zinc-500 mb-1.5">Description</label>
+                  <textarea
+                    placeholder="Describe the mod..."
+                    value={form.description}
+                    onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
+                    rows={3}
+                    className={inputCls}
+                    required
+                  />
+                </div>
+
+                <div className="flex items-center gap-6 flex-wrap">
+                  <div>
+                    <label className="block text-xs text-zinc-500 mb-1.5">Category</label>
+                    <select
+                      value={form.category}
+                      onChange={(e) => setForm((f) => ({ ...f, category: e.target.value as "java" | "bedrock" }))}
+                      className="rounded-xl px-3 py-2.5 text-sm text-white focus:outline-none bg-zinc-900/80 border border-zinc-800 focus:border-green-400/50 transition-colors"
+                    >
+                      <option value="java">☕ Java</option>
+                      <option value="bedrock">📱 Bedrock</option>
+                    </select>
+                  </div>
+                  <label className="flex items-center gap-2 text-sm text-zinc-400 cursor-pointer mt-5">
+                    <input
+                      type="checkbox"
+                      checked={form.featured}
+                      onChange={(e) => setForm((f) => ({ ...f, featured: e.target.checked }))}
+                      className="w-4 h-4 rounded accent-green-400"
+                    />
+                    ⭐ Featured mod
+                  </label>
+                </div>
+
+                <motion.button
+                  type="submit"
+                  disabled={createMod.isPending}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  className="w-full py-3 rounded-xl font-black text-black transition-all duration-200 disabled:opacity-60"
+                  style={{
+                    background: "linear-gradient(135deg, #4ade80, #22c55e)",
+                    boxShadow: "0 0 20px rgba(74,222,128,0.35)",
+                  }}
+                >
+                  {createMod.isPending ? "Uploading..." : "⚡ Upload Mod"}
+                </motion.button>
+              </motion.form>
+            )}
+          </AnimatePresence>
+
+          {/* Mod list */}
+          <div>
+            <h2 className="font-bold text-base mb-4 text-zinc-300">
+              All Mods {mods && <span className="text-zinc-600 font-mono text-sm">({mods.length})</span>}
+            </h2>
+
+            {isLoading ? (
+              <div className="space-y-3">
+                {Array.from({ length: 3 }).map((_, i) => <ModSkeleton key={i} />)}
+              </div>
+            ) : !mods || mods.length === 0 ? (
+              <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}
+                className="text-center py-12 rounded-2xl"
+                style={{ background: "rgba(255,255,255,0.02)", border: "1px dashed rgba(255,255,255,0.08)" }}>
+                <div className="text-4xl mb-3">📭</div>
+                <p className="text-zinc-400 font-semibold">No mods uploaded yet.</p>
+                <button onClick={() => setShowForm(true)}
+                  className="mt-3 text-sm font-semibold transition-colors" style={{ color: "#4ade80" }}>
+                  Upload the first one →
+                </button>
+              </motion.div>
+            ) : (
+              <motion.div className="space-y-3" initial="hidden" animate="show"
+                variants={{ show: { transition: { staggerChildren: 0.05 } } }}>
+                {mods.map((mod) => (
+                  <motion.div key={mod.id}
+                    variants={{ hidden: { opacity: 0, x: -10 }, show: { opacity: 1, x: 0, transition: { duration: 0.3 } } }}
+                    className="rounded-2xl p-4 flex items-start justify-between gap-3 group"
+                    style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)" }}
+                    whileHover={{ borderColor: "rgba(74,222,128,0.2)" }}
+                  >
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap mb-1">
+                        <span className="font-bold text-sm text-white">{mod.name}</span>
+                        <span className={`text-[10px] px-1.5 py-0.5 rounded border ${
+                          mod.category === "java" ? "border-blue-400/30 text-blue-300" : "border-purple-400/30 text-purple-300"
+                        }`}>{mod.category}</span>
+                        {mod.featured && (
+                          <span className="text-[10px] px-1.5 py-0.5 rounded border border-yellow-400/30 text-yellow-300">⭐ featured</span>
+                        )}
+                      </div>
+                      <p className="text-zinc-500 text-xs line-clamp-1">{mod.description}</p>
+                      <p className="text-zinc-700 text-xs mt-0.5 font-mono">v{mod.version} · {mod.author} · {mod.downloads} dl</p>
+                    </div>
+                    <motion.button
+                      onClick={() => handleDelete(mod.id, mod.name)}
+                      disabled={deleting === mod.id}
+                      whileHover={{ scale: 1.1 }}
+                      whileTap={{ scale: 0.9 }}
+                      className="shrink-0 p-2 rounded-xl transition-all disabled:opacity-50"
+                      style={{ border: "1px solid rgba(239,68,68,0.2)", color: "#f87171" }}
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </motion.button>
+                  </motion.div>
+                ))}
+              </motion.div>
+            )}
           </div>
         </div>
       </div>
-
-      <div className="px-5 max-w-2xl mx-auto space-y-6">
-        {/* Upload form */}
-        {showForm && (
-          <form onSubmit={handleSubmit} className="glass-card rounded-2xl border border-green-500/20 p-5 space-y-4">
-            <h2 className="font-bold text-base flex items-center gap-2 text-green-300">
-              <Upload className="w-4 h-4" /> Upload New Mod
-            </h2>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              {[
-                { key: "name", label: "Mod Name", placeholder: "e.g. Futuristic Shaders" },
-                { key: "author", label: "Author", placeholder: "e.g. YGP Team" },
-                { key: "version", label: "Version", placeholder: "e.g. 1.0.0" },
-                { key: "downloadUrl", label: "Download URL", placeholder: "https://..." },
-                { key: "imageUrl", label: "Image URL (optional)", placeholder: "https://..." },
-                { key: "tags", label: "Tags (comma-separated)", placeholder: "shaders, pvp, survival" },
-              ].map(({ key, label, placeholder }) => (
-                <div key={key}>
-                  <label className="block text-xs text-zinc-400 mb-1">{label}</label>
-                  <input
-                    type="text"
-                    placeholder={placeholder}
-                    value={(form as any)[key]}
-                    onChange={(e) => setForm((f) => ({ ...f, [key]: e.target.value }))}
-                    className="w-full bg-zinc-900/80 border border-zinc-700 rounded-xl px-3 py-2.5 text-sm text-white placeholder-zinc-600 focus:outline-none focus:border-green-400/60 transition-colors"
-                    required={key !== "imageUrl" && key !== "tags"}
-                  />
-                </div>
-              ))}
-            </div>
-
-            <div>
-              <label className="block text-xs text-zinc-400 mb-1">Description</label>
-              <textarea
-                placeholder="Describe the mod..."
-                value={form.description}
-                onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
-                rows={3}
-                className="w-full bg-zinc-900/80 border border-zinc-700 rounded-xl px-3 py-2.5 text-sm text-white placeholder-zinc-600 focus:outline-none focus:border-green-400/60 transition-colors resize-none"
-                required
-              />
-            </div>
-
-            <div className="flex items-center gap-6">
-              <div>
-                <label className="block text-xs text-zinc-400 mb-1">Category</label>
-                <select
-                  value={form.category}
-                  onChange={(e) => setForm((f) => ({ ...f, category: e.target.value as "java" | "bedrock" }))}
-                  className="bg-zinc-900/80 border border-zinc-700 rounded-xl px-3 py-2.5 text-sm text-white focus:outline-none focus:border-green-400/60 transition-colors"
-                >
-                  <option value="java">Java</option>
-                  <option value="bedrock">Bedrock</option>
-                </select>
-              </div>
-              <label className="flex items-center gap-2 text-sm text-zinc-400 cursor-pointer mt-4">
-                <input
-                  type="checkbox"
-                  checked={form.featured}
-                  onChange={(e) => setForm((f) => ({ ...f, featured: e.target.checked }))}
-                  className="w-4 h-4 rounded accent-green-400"
-                />
-                Featured mod
-              </label>
-            </div>
-
-            <button
-              type="submit"
-              disabled={createMod.isPending}
-              className="w-full py-3 rounded-xl bg-green-500 hover:bg-green-400 disabled:opacity-60 font-bold text-black transition-all duration-200 shadow-[0_0_16px_rgba(74,222,128,0.3)]"
-            >
-              {createMod.isPending ? "Uploading..." : "Upload Mod"}
-            </button>
-          </form>
-        )}
-
-        {/* Mod list */}
-        <div>
-          <h2 className="font-bold text-base mb-4 text-zinc-300">
-            All Mods {mods && <span className="text-zinc-500 font-normal text-sm">({mods.length})</span>}
-          </h2>
-
-          {isLoading ? (
-            <div className="space-y-3">
-              {Array.from({ length: 3 }).map((_, i) => <ModSkeleton key={i} />)}
-            </div>
-          ) : !mods || mods.length === 0 ? (
-            <div className="text-center py-12 glass-card rounded-2xl border border-zinc-800">
-              <div className="text-4xl mb-3">📭</div>
-              <p className="text-zinc-400">No mods uploaded yet.</p>
-              <button onClick={() => setShowForm(true)} className="mt-3 text-green-400 text-sm hover:text-green-300">
-                Upload the first one →
-              </button>
-            </div>
-          ) : (
-            <div className="space-y-3">
-              {mods.map((mod) => (
-                <div key={mod.id} className="glass-card rounded-2xl border border-zinc-800 p-4 flex items-start justify-between gap-3">
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <span className="font-semibold text-sm text-white">{mod.name}</span>
-                      <span className={`text-[10px] px-1.5 py-0.5 rounded border ${
-                        mod.category === "java" ? "border-blue-400/30 text-blue-300" : "border-purple-400/30 text-purple-300"
-                      }`}>{mod.category}</span>
-                      {mod.featured && <span className="text-[10px] px-1.5 py-0.5 rounded border border-yellow-400/30 text-yellow-300">featured</span>}
-                    </div>
-                    <p className="text-zinc-500 text-xs mt-1 line-clamp-1">{mod.description}</p>
-                    <p className="text-zinc-600 text-xs mt-0.5">v{mod.version} · by {mod.author} · {mod.downloads} downloads</p>
-                  </div>
-                  <button
-                    onClick={() => handleDelete(mod.id, mod.name)}
-                    disabled={deleting === mod.id}
-                    className="shrink-0 p-2 rounded-xl border border-red-500/20 text-red-400 hover:bg-red-500/10 hover:border-red-400/40 transition-all disabled:opacity-50"
-                    title="Delete mod"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      </div>
-    </div>
+    </PageTransition>
   );
 }
