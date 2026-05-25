@@ -1,5 +1,5 @@
 import { useLocation } from "wouter";
-import { Home, Sword, Youtube, Share2 } from "lucide-react";
+import { Home, Sword, Youtube, Share2, ShieldCheck } from "lucide-react";
 import { motion } from "framer-motion";
 
 const NAV = [
@@ -7,6 +7,7 @@ const NAV = [
   { href: "/mods", icon: Sword, label: "Mods" },
   { href: "/youtube", icon: Youtube, label: "Videos" },
   { href: "/socials", icon: Share2, label: "Socials" },
+  { href: "/admin", icon: ShieldCheck, label: "Admin" },
 ];
 
 export default function BottomNav() {

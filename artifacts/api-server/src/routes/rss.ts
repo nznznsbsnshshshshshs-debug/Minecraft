@@ -13,7 +13,7 @@ const CHANNELS = [
   { name: "YGP Minecraft",     id: "UC2qPOU2DmdFWCB48n25kOlw" },
   { name: "YGP Countryballs",  id: "UCjTIKbyiJbyaPyVUTsIXyBg" },
   { name: "YGP Tech",          id: "UCm0W2zSESrjDtHiQcR6pqEQ" },
-  { name: "Yojit Art and Song",id: "UC8o27uf8chge9WO4HOk2Fag" },
+  { name: "Yojit Art and Music", id: "UC8o27uf8chge9WO4HOk2Fag" },
 ];
 
 function extractVideoId(item: any): string {
