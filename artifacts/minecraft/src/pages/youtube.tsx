@@ -145,7 +145,7 @@ export default function YouTubePage() {
                       <p className="text-red-400 text-xs mb-1.5 font-semibold">{video.channel}</p>
                       <h3 className="font-bold text-sm text-white line-clamp-2 leading-snug mb-2">{video.title}</h3>
                       <p className="text-zinc-500 text-xs">
-                        {new Date(video.published).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+                        {[video.views, video.published].filter(Boolean).join(" · ")}
                       </p>
                     </div>
                   </motion.a>

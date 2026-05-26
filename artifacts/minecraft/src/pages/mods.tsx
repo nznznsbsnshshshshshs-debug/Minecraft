@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Sword, Filter } from "lucide-react";
+import { useState, useMemo } from "react";
+import { Sword, Filter, Search, X } from "lucide-react";
 import { useListMods } from "@workspace/api-client-react";
 import ModCard from "@/components/mod-card";
 import { ModSkeleton } from "@/components/skeleton-card";
@@ -15,7 +15,21 @@ const FILTERS = [
 
 export default function Mods() {
   const [category, setCategory] = useState<"" | "java" | "bedrock">("");
+  const [query, setQuery] = useState("");
   const { data: mods, isLoading } = useListMods(category ? { category } : {});
+
+  const filtered = useMemo(() => {
+    if (!mods) return [];
+    const q = query.trim().toLowerCase();
+    if (!q) return mods;
+    return mods.filter(
+      (m) =>
+        m.name.toLowerCase().includes(q) ||
+        m.author.toLowerCase().includes(q) ||
+        m.description.toLowerCase().includes(q) ||
+        m.tags?.some((t) => t.toLowerCase().includes(q))
+    );
+  }, [mods, query]);
 
   return (
     <PageTransition>
@@ -53,8 +67,44 @@ export default function Mods() {
           </div>
         </div>
 
-        {/* Filter bar */}
-        <div className="px-5 mb-6 max-w-2xl mx-auto">
+        {/* Search + Filter bar */}
+        <div className="px-5 mb-6 max-w-2xl mx-auto space-y-3">
+          {/* Search */}
+          <motion.div
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.25 }}
+            className="relative"
+          >
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500 pointer-events-none" />
+            <input
+              type="text"
+              placeholder="Search by name, author, tag…"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              className="w-full pl-9 pr-9 py-2.5 rounded-xl text-sm text-white placeholder-zinc-600 focus:outline-none transition-colors"
+              style={{
+                background: "rgba(255,255,255,0.04)",
+                border: `1px solid ${query ? "rgba(74,222,128,0.4)" : "rgba(255,255,255,0.08)"}`,
+                boxShadow: query ? "0 0 12px rgba(74,222,128,0.08)" : "none",
+              }}
+            />
+            <AnimatePresence>
+              {query && (
+                <motion.button
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.8 }}
+                  onClick={() => setQuery("")}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-300 transition-colors"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </motion.button>
+              )}
+            </AnimatePresence>
+          </motion.div>
+
+          {/* Category filter */}
           <div className="flex items-center gap-2">
             <Filter className="w-4 h-4 text-zinc-600 shrink-0" />
             <div className="flex gap-2">
@@ -79,6 +129,15 @@ export default function Mods() {
                 </motion.button>
               ))}
             </div>
+            {query && (
+              <motion.span
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="ml-auto text-xs text-zinc-500"
+              >
+                {filtered.length} result{filtered.length !== 1 ? "s" : ""}
+              </motion.span>
+            )}
           </div>
         </div>
 
@@ -90,18 +149,30 @@ export default function Mods() {
                 className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {Array.from({ length: 4 }).map((_, i) => <ModSkeleton key={i} />)}
               </motion.div>
-            ) : !mods || mods.length === 0 ? (
+            ) : filtered.length === 0 ? (
               <motion.div key="empty" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}
                 className="text-center py-24">
                 <motion.div className="text-6xl mb-4" animate={{ rotate: [0, -10, 10, 0] }}
-                  transition={{ repeat: Infinity, duration: 3, ease: "easeInOut" }}>⚔️</motion.div>
-                <p className="text-zinc-400 font-semibold">No mods available yet.</p>
-                <p className="text-zinc-600 text-sm mt-1">Check back soon or upload one from the Admin panel.</p>
+                  transition={{ repeat: Infinity, duration: 3, ease: "easeInOut" as const }}>⚔️</motion.div>
+                {query ? (
+                  <>
+                    <p className="text-zinc-400 font-semibold">No mods match "{query}"</p>
+                    <button onClick={() => setQuery("")}
+                      className="mt-3 text-sm font-semibold transition-colors" style={{ color: "#4ade80" }}>
+                      Clear search
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <p className="text-zinc-400 font-semibold">No mods available yet.</p>
+                    <p className="text-zinc-600 text-sm mt-1">Check back soon!</p>
+                  </>
+                )}
               </motion.div>
             ) : (
               <motion.div key="grid" initial={{ opacity: 0 }} animate={{ opacity: 1 }}
                 className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {mods.map((mod, i) => <ModCard key={mod.id} mod={mod} index={i} />)}
+                {filtered.map((mod, i) => <ModCard key={mod.id} mod={mod} index={i} />)}
               </motion.div>
             )}
           </AnimatePresence>

@@ -49,7 +49,7 @@ export default function JavaMods() {
                 <motion.div className="text-6xl mb-4"
                   animate={{ y: [0, -8, 0] }} transition={{ repeat: Infinity, duration: 2.5, ease: "easeInOut" }}>☕</motion.div>
                 <p className="text-zinc-400 font-semibold">No Java mods uploaded yet.</p>
-                <p className="text-zinc-600 text-sm mt-1">Check the Admin panel to upload some.</p>
+                <p className="text-zinc-600 text-sm mt-1">Check back soon!</p>
               </motion.div>
             ) : (
               <motion.div key="grid" className="grid grid-cols-1 sm:grid-cols-2 gap-4"

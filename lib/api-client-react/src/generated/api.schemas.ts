@@ -16,6 +16,7 @@ export interface VideoItem {
   thumbnail: string;
   videoId: string;
   channel: string;
+  views?: string;
 }
 
 export interface RSSFeedResponse {

@@ -523,10 +523,6 @@ export default function Admin() {
                 style={{ background: "rgba(255,255,255,0.02)", border: "1px dashed rgba(255,255,255,0.08)" }}>
                 <div className="text-4xl mb-3">📭</div>
                 <p className="text-zinc-400 font-semibold">No mods uploaded yet.</p>
-                <button onClick={() => setShowForm(true)}
-                  className="mt-3 text-sm font-semibold transition-colors" style={{ color: "#4ade80" }}>
-                  Upload the first one →
-                </button>
               </motion.div>
             ) : (
               <motion.div className="space-y-3" initial="hidden" animate="show"
