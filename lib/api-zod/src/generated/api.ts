@@ -28,7 +28,9 @@ export const GetYouTubeRSSResponse = zod.object({
   "published": zod.string(),
   "thumbnail": zod.string(),
   "videoId": zod.string(),
-  "channel": zod.string()
+  "channelId": zod.string(),
+  "channel": zod.string(),
+  "views": zod.string()
 }))
 })
 

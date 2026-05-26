@@ -1,10 +1,7 @@
 import { Router, type IRouter } from "express";
+import Parser from "rss-parser";
 
 const router: IRouter = Router();
-
-const INNERTUBE_KEY = "AIzaSyAO_FJ2SlqU8Q4STEHLGCilw_Y9_11qcW8";
-const INNERTUBE_URL = `https://www.youtube.com/youtubei/v1/browse?key=${INNERTUBE_KEY}`;
-const VIDEOS_PARAMS = "EgZ2aWRlb3M%3D";
 
 const CHANNELS = [
   { name: "Yojit Gaming Pro",    id: "UCO8D074-mW6jZHvJv3WQqyw" },
@@ -20,82 +17,57 @@ interface VideoItem {
   published: string;
   thumbnail: string;
   videoId: string;
+  channelId: string;
   channel: string;
   views: string;
 }
 
-function collectTiles(obj: any, results: any[] = [], depth = 0): any[] {
-  if (depth > 25 || !obj || typeof obj !== "object") return results;
-  if (obj.tileRenderer) results.push(obj.tileRenderer);
-  for (const v of Object.values(obj)) collectTiles(v, results, depth + 1);
-  return results;
-}
+type CustomFeed = Record<string, never>;
+type CustomItem = {
+  "yt:videoId"?: string;
+  "yt:channelId"?: string;
+  "media:group"?: {
+    "media:thumbnail"?: { $?: { url?: string } };
+  };
+};
 
-function parseTile(tile: any, channelName: string): VideoItem | null {
-  try {
-    const thumbUrl: string =
-      tile.header?.tileHeaderRenderer?.thumbnail?.thumbnails?.[0]?.url ?? "";
-    const videoId = thumbUrl.match(/\/vi\/([a-zA-Z0-9_-]{11})\//)?.[1];
-    if (!videoId) return null;
-
-    const meta = tile.metadata?.tileMetadataRenderer;
-    const title: string = meta?.title?.simpleText ?? "";
-    if (!title) return null;
-
-    const lines: any[] = meta?.lines ?? [];
-    const infoItems: any[] = lines[1]?.lineRenderer?.items ?? [];
-    const views: string = infoItems[0]?.lineItemRenderer?.text?.simpleText ?? "";
-    const published: string =
-      infoItems[2]?.lineItemRenderer?.text?.simpleText ??
-      infoItems[1]?.lineItemRenderer?.text?.simpleText ?? "";
-
-    const thumbnail = `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`;
-
-    return {
-      title,
-      link: `https://www.youtube.com/watch?v=${videoId}`,
-      published,
-      thumbnail,
-      videoId,
-      channel: channelName,
-      views,
-    };
-  } catch {
-    return null;
-  }
-}
+const parser = new Parser<CustomFeed, CustomItem>({
+  customFields: {
+    item: [
+      ["yt:videoId", "yt:videoId"],
+      ["yt:channelId", "yt:channelId"],
+      ["media:group", "media:group"],
+    ],
+  },
+  timeout: 12000,
+});
 
 async function fetchChannelVideos(
   channel: { name: string; id: string },
   max = 8
 ): Promise<VideoItem[]> {
-  const res = await fetch(INNERTUBE_URL, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      browseId: channel.id,
-      params: VIDEOS_PARAMS,
-      context: {
-        client: {
-          clientName: "TVHTML5",
-          clientVersion: "7.20240101",
-          hl: "en",
-          gl: "US",
-        },
-      },
-    }),
-    signal: AbortSignal.timeout(12000),
-  });
+  const url = `https://www.youtube.com/feeds/videos.xml?channel_id=${channel.id.trim()}`;
+  const feed = await parser.parseURL(url);
 
-  if (!res.ok) throw new Error(`HTTP ${res.status}`);
-  const data = await res.json();
-
-  const tiles = collectTiles(data);
   const videos: VideoItem[] = [];
-  for (const tile of tiles) {
-    if (videos.length >= max) break;
-    const v = parseTile(tile, channel.name);
-    if (v) videos.push(v);
+  for (const item of feed.items.slice(0, max)) {
+    const videoId = (item["yt:videoId"] ?? "").trim();
+    if (!videoId) continue;
+
+    const thumbnail =
+      item["media:group"]?.["media:thumbnail"]?.["$"]?.url ??
+      `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`;
+
+    videos.push({
+      title: item.title ?? "",
+      link: item.link ?? `https://www.youtube.com/watch?v=${videoId}`,
+      published: item.pubDate ?? item.isoDate ?? "",
+      thumbnail,
+      videoId,
+      channelId: channel.id.trim(),
+      channel: channel.name,
+      views: "",
+    });
   }
   return videos;
 }
@@ -109,8 +81,9 @@ router.get("/rss", async (req, res) => {
       try {
         const videos = await fetchChannelVideos(channel);
         allVideos.push(...videos);
-      } catch (err: any) {
-        errors.push(`${channel.name}: ${err?.message ?? "unknown"}`);
+      } catch (err: unknown) {
+        const msg = err instanceof Error ? err.message : "unknown";
+        errors.push(`${channel.name}: ${msg}`);
         req.log.warn({ channel: channel.name, err }, "Failed to fetch channel videos");
       }
     })

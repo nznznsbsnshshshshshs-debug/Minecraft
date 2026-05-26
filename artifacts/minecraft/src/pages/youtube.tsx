@@ -5,14 +5,26 @@ import { VideoSkeleton } from "@/components/skeleton-card";
 import PageTransition from "@/components/page-transition";
 import { motion, AnimatePresence } from "framer-motion";
 
-const CHANNELS = ["All", "Yojit Gaming Pro", "YGP Minecraft", "YGP Countryballs", "YGP Tech", "Yojit Art and Music"];
+const CHANNELS = [
+  { label: "All",                 id: null },
+  { label: "Yojit Gaming Pro",    id: "UCO8D074-mW6jZHvJv3WQqyw" },
+  { label: "YGP Minecraft",       id: "UC2qPOU2DmdFWCB48n25kOlw" },
+  { label: "YGP Countryballs",    id: "UCjTIKbyiJbyaPyVUTsIXyBg" },
+  { label: "YGP Tech",            id: "UCm0W2zSESrjDtHiQcR6pqEQ" },
+  { label: "Yojit Art and Music", id: "UC8o27uf8chge9WO4HOk2Fag" },
+];
 
 export default function YouTubePage() {
-  const [activeChannel, setActiveChannel] = useState("All");
+  const [activeId, setActiveId] = useState<string | null>(null);
   const { data, isLoading, refetch, isFetching } = useGetYouTubeRSS();
 
   const allVideos = data?.videos ?? [];
-  const videos = activeChannel === "All" ? allVideos : allVideos.filter((v) => v.channel === activeChannel);
+  const videos =
+    activeId === null
+      ? allVideos
+      : allVideos.filter((v) => v.channelId.trim() === activeId.trim());
+
+  const activeLabel = CHANNELS.find((c) => c.id === activeId)?.label ?? "All";
 
   return (
     <PageTransition>
@@ -49,23 +61,26 @@ export default function YouTubePage() {
         {/* Channel filter */}
         <div className="px-5 mb-6">
           <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide max-w-2xl mx-auto">
-            {CHANNELS.map((ch) => (
-              <motion.button
-                key={ch}
-                onClick={() => setActiveChannel(ch)}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                className="shrink-0 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all duration-200"
-                style={{
-                  background: activeChannel === ch ? "rgba(239,68,68,0.15)" : "rgba(255,255,255,0.04)",
-                  border: `1px solid ${activeChannel === ch ? "rgba(239,68,68,0.5)" : "rgba(255,255,255,0.08)"}`,
-                  color: activeChannel === ch ? "#f87171" : "#71717a",
-                  boxShadow: activeChannel === ch ? "0 0 12px rgba(239,68,68,0.2)" : "none",
-                }}
-              >
-                {ch}
-              </motion.button>
-            ))}
+            {CHANNELS.map((ch) => {
+              const isActive = ch.id === activeId;
+              return (
+                <motion.button
+                  key={ch.label}
+                  onClick={() => setActiveId(ch.id)}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  className="shrink-0 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all duration-200"
+                  style={{
+                    background: isActive ? "rgba(239,68,68,0.15)" : "rgba(255,255,255,0.04)",
+                    border: `1px solid ${isActive ? "rgba(239,68,68,0.5)" : "rgba(255,255,255,0.08)"}`,
+                    color: isActive ? "#f87171" : "#71717a",
+                    boxShadow: isActive ? "0 0 12px rgba(239,68,68,0.2)" : "none",
+                  }}
+                >
+                  {ch.label}
+                </motion.button>
+              );
+            })}
           </div>
         </div>
 
@@ -82,14 +97,16 @@ export default function YouTubePage() {
                 className="text-center py-24">
                 <Youtube className="w-12 h-12 mx-auto mb-4" style={{ color: "rgba(239,68,68,0.3)" }} />
                 <p className="text-zinc-400 font-semibold">No videos available</p>
-                <p className="text-zinc-600 text-sm mt-1">Check your connection or try refreshing.</p>
+                <p className="text-zinc-600 text-sm mt-1">
+                  {activeId ? `No videos found for ${activeLabel}. Try refreshing.` : "Check your connection or try refreshing."}
+                </p>
               </motion.div>
             ) : (
-              <motion.div key="grid" className="grid grid-cols-1 sm:grid-cols-2 gap-4"
+              <motion.div key={activeId ?? "all"} className="grid grid-cols-1 sm:grid-cols-2 gap-4"
                 initial="hidden"
                 animate="show"
                 variants={{ show: { transition: { staggerChildren: 0.06 } } }}>
-                {videos.map((video, i) => (
+                {videos.map((video) => (
                   <motion.a
                     key={video.videoId}
                     href={video.link}
@@ -145,7 +162,7 @@ export default function YouTubePage() {
                       <p className="text-red-400 text-xs mb-1.5 font-semibold">{video.channel}</p>
                       <h3 className="font-bold text-sm text-white line-clamp-2 leading-snug mb-2">{video.title}</h3>
                       <p className="text-zinc-500 text-xs">
-                        {[video.views, video.published].filter(Boolean).join(" · ")}
+                        {[video.views, video.published ? new Date(video.published).toLocaleDateString() : ""].filter(Boolean).join(" · ")}
                       </p>
                     </div>
                   </motion.a>

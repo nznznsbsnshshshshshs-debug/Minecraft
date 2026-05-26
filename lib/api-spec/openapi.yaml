@@ -161,9 +161,13 @@ components:
           type: string
         videoId:
           type: string
+        channelId:
+          type: string
         channel:
           type: string
-      required: [title, link, published, thumbnail, videoId, channel]
+        views:
+          type: string
+      required: [title, link, published, thumbnail, videoId, channelId, channel, views]
     RSSFeedResponse:
       type: object
       properties:
