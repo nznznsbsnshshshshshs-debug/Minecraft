@@ -1,0 +1,11 @@
+{
+  "/_not-found/page": "app/_not-found/page.js",
+  "/api/admin/delete/route": "app/api/admin/delete/route.js",
+  "/api/admin/login/route": "app/api/admin/login/route.js",
+  "/api/admin/upload/route": "app/api/admin/upload/route.js",
+  "/api/mods/route": "app/api/mods/route.js",
+  "/api/rss/route": "app/api/rss/route.js",
+  "/mods/page": "app/mods/page.js",
+  "/page": "app/page.js",
+  "/server/page": "app/server/page.js"
+}
