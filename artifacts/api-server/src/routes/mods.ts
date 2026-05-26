@@ -85,6 +85,22 @@ router.get("/mods/:id", async (req, res) => {
   }
 });
 
+router.post("/mods/:id/download", async (req, res) => {
+  try {
+    await connectMongo();
+    const mod = await ModModel.findByIdAndUpdate(
+      req.params.id,
+      { $inc: { downloads: 1 } },
+      { new: true }
+    ).lean() as any;
+    if (!mod) return res.status(404).json({ success: false, message: "Mod not found" });
+    return res.json({ success: true, downloads: mod.downloads ?? 0 });
+  } catch (err) {
+    req.log.error({ err }, "Failed to track download");
+    return res.status(500).json({ success: false, message: "Failed to track download" });
+  }
+});
+
 router.patch("/mods/:id", async (req, res) => {
   try {
     await connectMongo();

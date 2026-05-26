@@ -1,6 +1,7 @@
 import { Download, Tag, Star, Zap } from "lucide-react";
 import { motion, useMotionValue, useTransform, useSpring } from "framer-motion";
-import { useRef } from "react";
+import { useRef, useState } from "react";
+import { useTrackDownload } from "@workspace/api-client-react";
 
 interface Mod {
   id: string;
@@ -24,6 +25,8 @@ export default function ModCard({ mod, index = 0 }: { mod: Mod; index?: number }
   const rotateY = useTransform(x, [-60, 60], [-6, 6]);
   const sX = useSpring(rotateX, { stiffness: 300, damping: 30 });
   const sY = useSpring(rotateY, { stiffness: 300, damping: 30 });
+  const [downloads, setDownloads] = useState(mod.downloads);
+  const trackDownload = useTrackDownload();
 
   const handleMouse = (e: React.MouseEvent<HTMLDivElement>) => {
     const rect = cardRef.current?.getBoundingClientRect();
@@ -32,6 +35,14 @@ export default function ModCard({ mod, index = 0 }: { mod: Mod; index?: number }
     y.set(e.clientY - rect.top - rect.height / 2);
   };
   const resetMouse = () => { x.set(0); y.set(0); };
+
+  const handleDownloadClick = () => {
+    setDownloads((d) => d + 1);
+    trackDownload.mutate({ id: mod.id }, {
+      onError: () => setDownloads((d) => d - 1),
+      onSuccess: (data) => setDownloads(data.downloads),
+    });
+  };
 
   const isJava = mod.category === "java";
 
@@ -122,7 +133,7 @@ export default function ModCard({ mod, index = 0 }: { mod: Mod; index?: number }
             <span className="font-mono">v{mod.version}</span>
             <span className="flex items-center gap-1">
               <Download className="w-3 h-3" />
-              {mod.downloads.toLocaleString()}
+              {downloads.toLocaleString()}
             </span>
             <span className="ml-auto truncate">by {mod.author}</span>
           </div>
@@ -142,6 +153,7 @@ export default function ModCard({ mod, index = 0 }: { mod: Mod; index?: number }
             href={mod.downloadUrl}
             target="_blank"
             rel="noopener noreferrer"
+            onClick={handleDownloadClick}
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.97 }}
             className="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl font-bold text-sm"

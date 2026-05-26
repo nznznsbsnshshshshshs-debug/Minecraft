@@ -426,6 +426,47 @@ export function useGetMod<TData = Awaited<ReturnType<typeof getMod>>, TError = E
 
 
 
+export const getTrackDownloadUrl = (id: string) => `/api/mods/${id}/download`;
+
+/**
+ * @summary Increment download count for a mod
+ */
+export const trackDownload = async (id: string, options?: RequestInit): Promise<{ success: boolean; downloads: number }> => {
+  return customFetch<{ success: boolean; downloads: number }>(getTrackDownloadUrl(id), {
+    ...options,
+    method: 'POST',
+  });
+};
+
+export const getTrackDownloadMutationOptions = <TError = ErrorType<ErrorResponse>, TContext = unknown>(
+  options?: { mutation?: UseMutationOptions<Awaited<ReturnType<typeof trackDownload>>, TError, { id: string }, TContext>; request?: SecondParameter<typeof customFetch> }
+): UseMutationOptions<Awaited<ReturnType<typeof trackDownload>>, TError, { id: string }, TContext> => {
+  const mutationKey = ['trackDownload'];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<Awaited<ReturnType<typeof trackDownload>>, { id: string }> = (props) => {
+    return trackDownload(props.id, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type TrackDownloadMutationResult = NonNullable<Awaited<ReturnType<typeof trackDownload>>>;
+export type TrackDownloadMutationError = ErrorType<ErrorResponse>;
+
+/**
+ * @summary Increment download count for a mod
+ */
+export const useTrackDownload = <TError = ErrorType<ErrorResponse>, TContext = unknown>(
+  options?: { mutation?: UseMutationOptions<Awaited<ReturnType<typeof trackDownload>>, TError, { id: string }, TContext>; request?: SecondParameter<typeof customFetch> }
+): UseMutationResult<Awaited<ReturnType<typeof trackDownload>>, TError, { id: string }, TContext> => {
+  return useMutation(getTrackDownloadMutationOptions(options));
+};
+
 export const getUpdateModUrl = (id: string) => `/api/mods/${id}`;
 
 /**
