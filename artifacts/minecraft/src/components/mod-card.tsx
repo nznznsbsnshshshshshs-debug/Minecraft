@@ -44,17 +44,19 @@ export default function ModCard({ mod, index = 0 }: { mod: Mod; index?: number }
     >
       <motion.div
         ref={cardRef}
-        style={{ rotateX: sX, rotateY: sY, transformStyle: "preserve-3d" }}
+        style={{
+          rotateX: sX,
+          rotateY: sY,
+          transformStyle: "preserve-3d",
+          background: "rgba(255,255,255,0.03)",
+          backdropFilter: "blur(16px)",
+          border: isJava ? "1px solid rgba(59,130,246,0.2)" : "1px solid rgba(168,85,247,0.2)",
+        }}
         onMouseMove={handleMouse}
         onMouseLeave={resetMouse}
         whileHover={{ scale: 1.02 }}
         transition={{ type: "spring", stiffness: 300, damping: 25 }}
         className="relative group rounded-2xl overflow-hidden cursor-pointer"
-        style={{
-          background: "rgba(255,255,255,0.03)",
-          backdropFilter: "blur(16px)",
-          border: isJava ? "1px solid rgba(59,130,246,0.2)" : "1px solid rgba(168,85,247,0.2)",
-        }}
       >
         {/* Hover glow layer */}
         <motion.div

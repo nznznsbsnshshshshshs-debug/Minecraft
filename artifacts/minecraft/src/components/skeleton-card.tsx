@@ -1,11 +1,5 @@
 import { motion } from "framer-motion";
 
-const shimmer = {
-  initial: { x: "-100%" },
-  animate: { x: "100%" },
-  transition: { repeat: Infinity, duration: 1.4, ease: "linear" },
-};
-
 function ShimmerBar({ className }: { className?: string }) {
   return (
     <div className={`relative overflow-hidden rounded ${className}`}
@@ -13,7 +7,9 @@ function ShimmerBar({ className }: { className?: string }) {
       <motion.div
         className="absolute inset-0"
         style={{ background: "linear-gradient(90deg, transparent, rgba(74,222,128,0.08), transparent)" }}
-        {...shimmer}
+        initial={{ x: "-100%" }}
+        animate={{ x: "100%" }}
+        transition={{ repeat: Infinity, duration: 1.4, ease: "linear" as const }}
       />
     </div>
   );
