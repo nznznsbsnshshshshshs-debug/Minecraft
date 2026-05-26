@@ -1,6 +1,5 @@
 {
   "installCommand": "pnpm install --no-frozen-lockfile",
   "buildCommand": "pnpm --filter minecraft-website run build",
-  "outputDirectory": "artifacts/minecraft/.next",
-  "framework": "nextjs"
+  "outputDirectory": "artifacts/minecraft/.next"
 }
