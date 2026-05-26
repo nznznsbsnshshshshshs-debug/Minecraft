@@ -3,14 +3,6 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "start": "next start",
-    "lint": "next lint"
-  },
-  "dependencies": {
-    "next": "15.0.0",
-    "react": "^19.0.0-rc",
-    "react-dom": "^19.0.0-rc"
+    "build": "PORT=3000 BASE_PATH=/ npm -C artifacts/minecraft run build"
   }
 }
