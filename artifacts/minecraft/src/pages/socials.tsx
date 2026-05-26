@@ -104,7 +104,7 @@ const PLATFORMS: Platform[] = [
     hoverBorder: "rgba(88,101,242,0.5)",
     hoverShadow: "0 0 20px rgba(88,101,242,0.14)",
     links: [
-      { name: "YGP Community", handle: "discord.gg/dZxB4RBjAu", url: "https://discord.gg/dZxB4RBjAu" },
+      { name: "YGP Community", handle: "discord.gg/DkmZTKCA", url: "https://discord.gg/DkmZTKCA" },
     ],
   },
 ];
