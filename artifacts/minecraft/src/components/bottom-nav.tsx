@@ -1,6 +1,7 @@
 import { useLocation } from "wouter";
 import { Home, Sword, Youtube, Share2, ShieldCheck } from "lucide-react";
 import { motion } from "framer-motion";
+import { usePerformanceConfig } from "@/lib/performance";
 
 const NAV = [
   { href: "/", icon: Home, label: "Home" },
@@ -12,6 +13,7 @@ const NAV = [
 
 export default function BottomNav() {
   const [location, navigate] = useLocation();
+  const config = usePerformanceConfig();
 
   const activeIdx = NAV.findIndex(({ href }) =>
     href === "/" ? location === "/" : location.startsWith(href)
@@ -21,13 +23,14 @@ export default function BottomNav() {
     <nav
       className="fixed bottom-0 left-0 right-0 z-50 h-16 safe-area-pb"
       style={{
-        background: "rgba(0,0,0,0.88)",
-        backdropFilter: "blur(24px)",
-        borderTop: "1px solid rgba(74,222,128,0.12)",
+        background: config.enableGlassmorphism ? "rgba(0,0,0,0.88)" : "rgba(0,0,0,0.95)",
+        backdropFilter: config.enableGlassmorphism ? "blur(24px)" : "blur(8px)",
+        borderTop: config.enableNeonBorders ? "1px solid rgba(74,222,128,0.2)" : "1px solid rgba(255,255,255,0.06)",
+        transformStyle: config.enable3D ? "preserve-3d" : undefined,
       }}
     >
       <div className="relative flex items-stretch h-full max-w-lg mx-auto">
-        {activeIdx >= 0 && (
+        {activeIdx >= 0 && config.enableAnimations && (
           <motion.div
             className="absolute top-2 bottom-2 rounded-xl pointer-events-none"
             style={{
@@ -49,21 +52,28 @@ export default function BottomNav() {
               className="relative flex flex-col items-center justify-center gap-0.5 flex-1 py-1"
             >
               <motion.div
-                animate={active ? { scale: 1.15 } : { scale: 1 }}
+                animate={config.enableAnimations && active ? { scale: 1.15 } : { scale: 1 }}
                 transition={{ type: "spring", stiffness: 400, damping: 20 }}
               >
                 <Icon
                   className="w-5 h-5"
                   style={{
                     color: active ? "#4ade80" : "#52525b",
-                    filter: active ? "drop-shadow(0 0 8px rgba(74,222,128,0.9))" : "none",
+                    filter: active && config.enableGlowEffects
+                      ? "drop-shadow(0 0 8px rgba(74,222,128,0.9))"
+                      : "none",
                     transition: "color 0.2s, filter 0.2s",
+                    transform: config.enable3D && active ? "translateZ(5px)" : undefined,
                   }}
                 />
               </motion.div>
               <span
                 className="text-[9px] font-semibold tracking-wide"
-                style={{ color: active ? "#4ade80" : "#52525b", transition: "color 0.2s" }}
+                style={{
+                  color: active ? "#4ade80" : "#52525b",
+                  transition: "color 0.2s",
+                  transform: config.enable3D && active ? "translateZ(3px)" : undefined,
+                }}
               >
                 {label}
               </span>
