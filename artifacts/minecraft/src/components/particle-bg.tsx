@@ -1,16 +1,21 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
+import { usePerformanceConfig } from "@/lib/performance";
 
 interface Particle {
   x: number; y: number;
   vx: number; vy: number;
   size: number; alpha: number;
   hue: number; hueSpeed: number;
+  depth: number;
 }
 
-export default function ParticleBg({ count = 50, rgb = false }: { count?: number; rgb?: boolean }) {
+export default function ParticleBg() {
+  const config = usePerformanceConfig();
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
+    if (!config.enableParticles) return;
+
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext("2d");
@@ -18,6 +23,7 @@ export default function ParticleBg({ count = 50, rgb = false }: { count?: number
 
     let animId: number;
     let globalHue = 120;
+    const count = config.particleCount;
     const particles: Particle[] = [];
 
     const resize = () => {
@@ -31,51 +37,63 @@ export default function ParticleBg({ count = 50, rgb = false }: { count?: number
       particles.push({
         x: Math.random() * window.innerWidth,
         y: Math.random() * window.innerHeight,
-        vx: (Math.random() - 0.5) * 0.5,
-        vy: (Math.random() - 0.5) * 0.5,
+        vx: (Math.random() - 0.5) * (0.3 + config.animationSpeed * 0.5),
+        vy: (Math.random() - 0.5) * (0.3 + config.animationSpeed * 0.5),
         size: Math.random() * 2.5 + 0.5,
-        alpha: Math.random() * 0.6 + 0.1,
+        alpha: Math.random() * config.particleOpacity + 0.05,
         hue: Math.random() * 60 + 100,
         hueSpeed: (Math.random() - 0.5) * 0.3,
+        depth: Math.random(),
       });
     }
 
+    const connectionDist = config.enable3D ? 120 : 90;
+    const speedMult = 1 + (config.epicSpeedBoost || 0);
+
     const draw = () => {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
-      if (rgb) globalHue = (globalHue + 0.15) % 360;
+      if (config.particleRGB) globalHue = (globalHue + 0.15 * speedMult) % 360;
 
       particles.forEach((p, i) => {
-        p.x += p.vx;
-        p.y += p.vy;
+        p.x += p.vx * speedMult;
+        p.y += p.vy * speedMult;
         if (p.x < 0) p.x = canvas.width;
         if (p.x > canvas.width) p.x = 0;
         if (p.y < 0) p.y = canvas.height;
         if (p.y > canvas.height) p.y = 0;
 
-        const hue = rgb ? (globalHue + i * 7) % 360 : (120 + p.hue * 0.2);
+        const depthScale = config.enable3D ? 0.5 + p.depth * 0.8 : 1;
+        const hue = config.particleRGB ? (globalHue + i * 7) % 360 : (120 + p.hue * 0.2);
 
         ctx.beginPath();
-        ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-        ctx.fillStyle = `hsla(${hue}, 100%, 65%, ${p.alpha})`;
-        ctx.shadowBlur = p.size * 6;
-        ctx.shadowColor = `hsla(${hue}, 100%, 65%, 0.8)`;
+        ctx.arc(p.x, p.y, p.size * depthScale, 0, Math.PI * 2);
+        ctx.fillStyle = `hsla(${hue}, 100%, 65%, ${p.alpha * config.particleOpacity})`;
+
+        if (config.particleGlow) {
+          ctx.shadowBlur = p.size * 6 * depthScale;
+          ctx.shadowColor = `hsla(${hue}, 100%, 65%, 0.8)`;
+        } else {
+          ctx.shadowBlur = 0;
+        }
         ctx.fill();
 
-        // connection lines
-        particles.forEach((p2, j) => {
-          if (j <= i) return;
-          const dx = p.x - p2.x, dy = p.y - p2.y;
-          const dist = Math.sqrt(dx * dx + dy * dy);
-          if (dist < 100) {
-            ctx.beginPath();
-            ctx.strokeStyle = `hsla(${hue}, 100%, 65%, ${0.08 * (1 - dist / 100)})`;
-            ctx.lineWidth = 0.5;
-            ctx.shadowBlur = 0;
-            ctx.moveTo(p.x, p.y);
-            ctx.lineTo(p2.x, p2.y);
-            ctx.stroke();
+        // Connection lines
+        if (config.particleConnections) {
+          for (let j = i + 1; j < particles.length; j++) {
+            const p2 = particles[j];
+            const dx = p.x - p2.x, dy = p.y - p2.y;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+            if (dist < connectionDist) {
+              ctx.beginPath();
+              ctx.strokeStyle = `hsla(${hue}, 100%, 65%, ${0.08 * (1 - dist / connectionDist) * config.particleOpacity})`;
+              ctx.lineWidth = 0.5;
+              ctx.shadowBlur = 0;
+              ctx.moveTo(p.x, p.y);
+              ctx.lineTo(p2.x, p2.y);
+              ctx.stroke();
+            }
           }
-        });
+        }
       });
 
       ctx.shadowBlur = 0;
@@ -87,7 +105,13 @@ export default function ParticleBg({ count = 50, rgb = false }: { count?: number
       cancelAnimationFrame(animId);
       window.removeEventListener("resize", resize);
     };
-  }, [count, rgb]);
+  }, [
+    config.enableParticles, config.particleCount, config.particleRGB,
+    config.particleConnections, config.particleGlow, config.particleOpacity,
+    config.animationSpeed, config.enable3D, config.epicSpeedBoost,
+  ]);
+
+  if (!config.enableParticles) return null;
 
   return (
     <canvas
